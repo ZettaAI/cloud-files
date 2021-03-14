@@ -13,6 +13,7 @@ import google.cloud.exceptions
 from google.cloud.storage import Batch, Client
 import requests
 import tenacity
+from datetime import datetime
 
 from .compression import COMPRESSION_TYPES
 from .connectionpools import S3ConnectionPool, GCloudBucketPool, MemoryPool, MEMORY_DATA
@@ -411,6 +412,10 @@ class GoogleCloudStorageInterface(StorageInterface):
     try:
       content = blob.download_as_string(start=start, end=end, raw_download=True)
     except google.cloud.exceptions.NotFound as err:
+      try:
+        self.put_file(f"error_log/{datetime.now().isoformat()}_{file_path.split('/')[-1]}.txt", str(err), "text/plain", compress=False)
+      except Exception as e:
+        pass
       return (None, None, None, None)
 
     hash_type = "md5"
